@@ -4,12 +4,12 @@ This repository contains 15 labs and 3 Lab Translations for GADS2020 Phase 2 pro
 
  #CONTENTS
 
-#TRANSLATIONS
+##TRANSLATIONS
 Error reporting and Debugging
 Getting started with Cloud storage and cloud SQL
 Getting started with compute engine
 
-#LABS
+##LABS
 Classifying Images with Pre-built  ML Models using cloud Vision API and AutoML
 Creating Virtual Machines
 Error reporting and Debugging 
