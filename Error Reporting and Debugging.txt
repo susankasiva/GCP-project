@@ -1,0 +1,108 @@
+LAB 3: Error Reporting and Debugging
+
+In this lab, you learn how to perform the following tasks:
+
+.Launch a simple Google App Engine application
+
+.Introduce an error into the application
+
+.Explore Cloud Error Reporting
+
+.Use Cloud Debugger to identify the error in the code
+
+.Fix the bug and monitor in Cloud Operations.
+
+#Steps
+
+1. Create an application
+	1. In the Cloud Console, launch Cloud Shell by clicking Activate Cloud Shell, if prompted click continue.
+
+	2. Create a local folder and get the App Engine Hello world application, run the following commands:
+		mkdir appengine-hello/ cd appengine-hello/ gsutil cp gs://cloud-training/archinfra/gae-hello/* .
+
+	3. Run the application using the local development server in Cloud Shell, run the following command:
+		dev_appserver.py $(pwd)
+
+	4. In Cloud Shell, click Web Preview > Preview on port 8080 to view the application.
+		Result:
+		A new browser window opens to the localhost and displays the message Hello, World!
+
+	5. In Cloud Shell, press Ctrl+C to exit the development server.
+
+2. Deploy the application to App Engine
+	1. Deploy the application to App Engine, run the following command:
+		gcloud app deploy app.yaml
+
+	2. If prompted for a region, enter the number corresponding to a region.
+
+	3. When prompted, type Y to continue.
+
+	4. When the process is done, verify that the application is working by running the following command:
+		gcloud app browse
+
+	5. Press Ctrl+C to exit the development mode.
+
+3. Introduce an error to break the application.
+	1. Examine the main.py file, run the following command:
+				
+		cat main.py
+	result: The application imports webapp2.
+
+	You will break the configuration by replacing the import library with one that doesnt exist.
+
+	2. Use the sed stream editor to change the import library to the nonexistent webapp22, run the following command:
+		sed -i -e 's/webapp2/webapp22/' main.py
+
+	3. Verify the change you made in the main.py file, run the following command:
+		cat main.py
+
+	Result: The application now tries to import webapp22.
+
+4. Re-deploy the application to App Engine.
+	1. Re-deploy the application to App Engine, by running the following command:
+		gcloud app deploy app.yaml --quiet
+
+	//The --quiet flag disables all interactive prompts when running gcloud commands. If input is required, defaults will be used. In this case, it avoids the need for you to type Y when prompted to continue the deployment.
+	
+	2. Verify that the application is broken by running the following command:
+		gcloud app browse
+			Note: If Cloud Shell does not detect your browser, click the link in the Cloud Shell output to view your app.
+
+	3. Press Ctrl+C to exit development mode.
+
+	4. Leave Cloud Shell open.
+
+5. Explore Cloud Error Reporting.
+
+View Error Reporting and trigger additional errors
+
+	1. In the Cloud Console, on the Navigation menu click error reporting
+		Result: An error is observed regarding the failed import of webapp22.
+
+	2. Click Auto reload
+
+	3.  Return to cloud shell and run the following command to get an url to your browser:
+		gcloud app browse
+
+	4. Click the resulting link several times to generate more errors.
+
+6. View details and identify the cause.
+	1. Click the Error name: ImportError: No module named webapp22.
+
+	2. For Stack trace sample, click Parsed. This opens the Cloud Debugger, showing the error in the code!
+	
+7. View the logs and fix the error.
+	1. On the Cloud Error Reporting page, ensure that Auto Reload is enabled to watch the addition of new errors.
+
+	2. In the open Cloud Shell window, fix the error by running the following command:
+		sed -i -e 's/webapp22/webapp2/' main.py
+
+	3. Then go ahead and re-deploy the application to App Engine, run the following command:
+		gcloud app deploy app.yaml --quiet
+
+	4. When the process is done, to verify that the application is working again, run the following command:
+		gcloud app browse
+			Result: no new errors are added.
+
+
+

@@ -1,0 +1,169 @@
+#LAB 2: Google Cloud Fundamentals: Getting Started with Cloud Storage and Cloud SQL
+In this Lab you will learn how to:
+.Create a Cloud Storage bucket and place an image into it.
+
+.Create a Cloud SQL instance and configure it.
+
+.Connect to the Cloud SQL instance from a web server.
+
+.Use the image in the Cloud Storage bucket on a web page.
+#Steps
+1. Deploy a webserver vm instance on the GCP console.
+	1. Create a compute engine virtual machine using the Google cloud Platform console(GCP).
+	gcloud compute instances create bloghost --machinetype "n1-standard-1" --image-project "debian-cloud" --image "debian-9-stretch-v20190213" --subnet "default" --tags http
+	
+	for firewall allow http traffic:
+		gcloud compute firewall -rules create allow-http --action=ALLOW destination=INGRESS --rules=http:80 --target-tag=http
+	
+	2. Click Management, security, disks, networking, sole tenancy to open that section of the dialog.Enter the following script as the value for Startup script:
+		apt-get update/ apt-get install apache2 php php-mysql -y/ service apache2 restart
+
+2. Create a Cloud Storage bucket using the gsutil command line
+	On the Google Cloud Platform menu, click Activate Cloud Shell and if a dialog box appears, click Start Cloud Shell or continue.
+
+	1. Create an environment variable called LOCATION and enter your chosen location either eu or us or asia. This can be done by entering either one of these commands:
+		export LOCATION=US
+		or
+		export LOCATION=EU
+		or
+		export LOCATION=ASIA
+
+	2. In cloud shell using the gsutil command line: Create a bucket named after your project ID, the DEVSHELL_PROJECT_ID environment variable contains your project ID, by running the following command. 
+		gsutil mb -l $LOCATION gs://$DEVSHELL_PROJECT_ID
+
+	3. Use the gsutil command line to retrieve a banner image from a publicly accessible Cloud Storage location:
+		gsutil cp gs://cloud-training/gcpfci/my-excellent-blog.png my-excellent-blog.png
+
+	4. Use the gsutil cp command to copy the banner image to your newly created storage bucket.
+		gsutil cp my-excellent-blog.png gs://$DEVSHELL_PROJECT_ID/my-excellent-blog.png
+
+	5. Then go ahead and modify the Access Control List of the object you just created so that it is readable by everyone:
+		gsutil acl ch -u allUsers:R gs://$DEVSHELL_PROJECT_ID/my-excellent-blog.png
+
+3. Create a cloud SQL instance
+	1. In the GCP Console, click SQL to create an instance, with a database engine that is of type MySQL.
+
+		1. First activate cloud shell press continue then run the following commands to install the mySQL server:
+		 	sudo apt-get update/ sudo apt-get install mysql-server
+
+		2. Then create an SQL instance named blog-db:
+			gcloud sql instances create blod-db mysql --host=[INSTANCE_IP] --user=root --password
+
+		3. Connect with the MySQL instance:
+			mysql --host=[CLOUD_SQL_PUBLIC_IP_ADDR] --user=root --password
+
+		3. Run the following command in order to see and copy the public IP address for your SQL instance to a text editor for use later in the lab.:
+			gcloud sql instances list
+
+		4. Click on Users menu on the left-hand side, and then click ADD USER ACCOUNT.For User name, type blogdbuser. For Password, type a password of your choice. Make a note of it. Click Create to create the user account in the database.
+			gcloud sql users create blogdbuser --instance=INSTANCE, -i INSTANCE [--async] [--host=HOST] [--password=PASSWORD] [GCLOUD_WIDE_FLAG …]
+
+		5, Use a public IP connection. Press the Add a network button whose name is web front end. for the network type the external IP address of your bloghost VM instance followed by /32:
+			The result will look like this:35.192.208.2/32
+
+		6. Click Done to finish defining the authorized network, and save to save the configuration change.
+
+4. Configure an application in a Compute Engine instance to use Cloud SQL using the GCP console.
+	1. In the navigation menu click compute engine and go to the VM instances listed. Point to your bloghost vm instance and ssh into it.
+
+	2. Change your working directory to the document root of the web server:
+		cd /var/www/html
+
+	3. Use the Nano text editor to edit a file called index.php
+		sudo nano index.php
+
+	4. Then go ahead and paste the content below into it:
+
+		<html>
+		<head><title>Welcome to my excellent blog</title></head>
+		<body>
+		<h1>Welcome to my excellent blog</h1>
+		<?php
+ 			$dbserver = "CLOUDSQLIP";
+			$dbuser = "blogdbuser";
+			$dbpassword = "DBPASSWORD";
+	// In a production blog, we would not store the MySQL
+	// password in the document root. Instead, we would store it in a
+	// configuration file elsewhere on the web server VM instance.
+
+			$conn = new mysqli($dbserver, $dbuser, $dbpassword);
+
+				if (mysqli_connect_error()) {
+       					 echo ("Database connection failed: " . mysqli_connect_error());
+						} else {
+       							 echo ("Database connection succeeded.");
+												}
+		?>
+		</body></html>
+
+	5. Press ctrl+0 and then press enter to save your edited file. Press ctrl+x to exit the nano editor.
+
+	6. Go ahead and restart the webserver:
+		sudo service apache2 restart
+	
+	7. Open a new web browser tab and paste into the address bar your bloghost VM instance's external IP address followed by /index.php. The URL will look like this:
+		35.192.208.2/index.php
+		Upon loading this page you will receive an error message that the connection failed this happens because you have not yet configured the PHP's connection to your Cloud SQL instance.
+	
+	8. Return to your ssh session on bloghost. Use the nano text editor to edit index.php again.
+		run the following command: 
+			sudo nano index.php
+
+	 9. In the nano text editor, replace CLOUDSQLIP with the Cloud SQL instance Public IP address that you noted above. Leave the quotation marks around the value in place.
+
+	10. In the nano text editor, replace DBPASSWORD with the Cloud SQL database password that you defined above. Leave the quotation marks around the value in place.
+			<html>
+				<head><title>Welcome to my excellent blog</title></head>
+			<body>
+				<h1>Welcome to my excellent blog</h1>
+				<?php
+ 					$dbserver = "104.155.161.94";
+					$dbuser = "blogdbuser";
+					$dbpassword = "password";
+			// In a production blog, we would not store the MySQL
+			// password in the document root. Instead, we would store it in a
+			// configuration file elsewhere on the web server VM instance.
+					$conn = new mysqli($dbserver, $dbuser, $dbpassword);
+					if (mysqli_connect_error()) {
+     						   echo ("Database connection failed: " . mysqli_connect_error());
+									} else {
+     						   echo ("Database connection succeeded.");
+							}
+				?>
+			</body></html>
+	11. Press Ctrl+O, and then press Enter to save your edited file. Press Ctrl+X to exit the nano text editor.
+
+	12. Go ahead and restart the server by executing the code below:
+		sudo service apache2 restart
+
+	13. Return to the web browser tab in which you opened your bloghost VM instance's external IP address. When you load the page, the following message appears:
+		result: Database connection succeeded.
+
+5. Configure an application in a Compute Engine instance to use a Cloud Storage object.
+	1. In the GCP console, click storage and go to the browser. Click on the bucket that is named after your GCP project. Look for an object called my-excellent-blog.png. Copy the URL behind the link icon that appears in that object's Public access column, or behind the words "Public link" if shown.
+	
+	2. Return to your ssh session on your bloghost VM instance.
+
+	3. Enter this command to set your working directory to the document root of the web server:
+		cd /var/www/html
+
+	4. Use the nano text editor to edit index.php:
+		sudo nano index.php
+
+	5. Use the arrow keys to move the cursor to the line that contains the h1 element. Press Enter to open up a new, blank screen line, and then paste the URL you copied earlier into the line.
+		URL : https://storage.googleapis.com/qwiklabs-gcp-03-a3b6ca227564/my-excellent-blog.png
+
+	6. Paste this HTML markup immediately before the URL:
+		<img src=' url' >
+	the result will look like this: <img src='https://storage.googleapis.com/qwiklabs-gcp-0005e186fa559a09/my-excellent-blog.png'>
+		save and exit the nano text editor.
+
+	7. Restart the webserver.
+		sudo service apache2 restart
+		result: Return to the web browser tab in which you opened your bloghost VM instance's external IP address.
+			When you load the page, its content now includes a banner image.
+
+
+
+
+	
