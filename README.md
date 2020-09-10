@@ -1,4 +1,5 @@
 # KASIVA'S GAD'S CLOUD PROJECT PHASE 2 2020 SUBMISSIONS
+This repository contains 15 labs and 3 Lab Translations for GADS2020 Phase 2 projects
 
 ##LABS
 
@@ -32,7 +33,7 @@ VPC Networking Lab
 
 Getting started with GKE
 
-#TRANSLATIONS
+##TRANSLATIONS
 
 Error reporting and Debugging
 
