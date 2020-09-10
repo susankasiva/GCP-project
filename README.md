@@ -31,3 +31,11 @@ The console and cloud shell
 VPC Networking Lab
 
 Getting started with GKE
+
+#TRANSLATIONS
+
+Error reporting and Debugging
+
+Getting started with Cloud storage and cloud SQL
+
+Getting started with compute engine
